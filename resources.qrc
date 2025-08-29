@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>images/logistics_bg.jpg.jpg</file>
+        <file>images/tabler--trash.png</file>
+        <file>images/tabler--file-type-pdf.png</file>
+        <file>images/tabler--edit.png</file>
+        <file>images/tabler--square-rounded-plus.png</file>
+        <file>images/tabler--device-ipad-horizontal-search.png</file>
+    </qresource>
+</RCC>

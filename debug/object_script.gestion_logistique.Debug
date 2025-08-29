@@ -1,0 +1,10 @@
+debug/QrCode.o
+debug/QtSMTPClient.o
+debug/client.o
+debug/commande.o
+debug/connection.o
+debug/main.o
+debug/mainwindow.o
+debug/qrc_resources.o
+debug/moc_QtSMTPClient.o
+debug/moc_mainwindow.o
