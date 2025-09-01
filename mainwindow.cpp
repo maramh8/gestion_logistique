@@ -1113,15 +1113,15 @@ void MainWindow::envoyerEmailCommandeComplete(int idClient, int idCommande)
     QtSMTPClient mailer;
     qDebug() << "🔄 Trying STARTTLS...";
     mailer.setServer("smtp.gmail.com", 587, false); // STARTTLS
-    mailer.setAuth("jery.wizin@gmail.com", "ahtb qwxe bbwc jstw");
-    if (mailer.sendEmail("jery.wizin@gmail.com", emailClient, subject, body)) {
+    mailer.setAuth("maramhidri8@gmail.com", "xxsd zxop ughm noqr");
+    if (mailer.sendEmail("maramhidri8@gmail.com", emailClient, subject, body)) {
         qDebug() << "✅ Email sent with STARTTLS (HTML)";
         return;
     }
     qDebug() << "⚠️ STARTTLS failed, trying SSL...";
     mailer.setServer("smtp.gmail.com", 465, true); // SSL direct
-    mailer.setAuth("jery.wizin@gmail.com", "ahtb qwxe bbwc jstw");
-    if (mailer.sendEmail("jery.wizin@gmail.com", emailClient, subject, body)) {
+    mailer.setAuth("maramhidri8@gmail.com", "xxsd zxop ughm noqr");
+    if (mailer.sendEmail("maramhidri8@gmail.com", emailClient, subject, body)) {
         qDebug() << "✅ Email sent with SSL (HTML)";
         return;
     }
@@ -1298,7 +1298,7 @@ void MainWindow::displayCommandesByEtat() {
 
 
 
-
+////////////////////research
 
 
 

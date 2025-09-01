@@ -189,8 +189,8 @@ public:
         frame_client = new QFrame(page);
         frame_client->setObjectName("frame_client");
         frame_client->setGeometry(QRect(520, 490, 781, 281));
-        frame_client->setFrameShape(QFrame::Shape::StyledPanel);
-        frame_client->setFrameShadow(QFrame::Shadow::Raised);
+        frame_client->setFrameShape(QFrame::StyledPanel);
+        frame_client->setFrameShadow(QFrame::Raised);
         groupBox_6 = new QGroupBox(page);
         groupBox_6->setObjectName("groupBox_6");
         groupBox_6->setGeometry(QRect(520, 70, 571, 80));
@@ -211,8 +211,8 @@ public:
         frame_commande = new QFrame(page_2);
         frame_commande->setObjectName("frame_commande");
         frame_commande->setGeometry(QRect(460, 530, 661, 271));
-        frame_commande->setFrameShape(QFrame::Shape::StyledPanel);
-        frame_commande->setFrameShadow(QFrame::Shadow::Raised);
+        frame_commande->setFrameShape(QFrame::StyledPanel);
+        frame_commande->setFrameShadow(QFrame::Raised);
         groupBox_4 = new QGroupBox(page_2);
         groupBox_4->setObjectName("groupBox_4");
         groupBox_4->setGeometry(QRect(1100, 180, 141, 191));
