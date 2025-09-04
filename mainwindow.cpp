@@ -70,6 +70,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->pushButton_modifCm->setIcon(QIcon(":/images/images/tabler--edit.png"));
     ui->pushButton_modifCm->setIconSize(QSize(30,30));
     ui->pushButton_modifCm->setStyleSheet("text-align: left; padding-left: 5px;");
+    ui->lineEdit_idCommande->hide();
 
 
 
@@ -107,7 +108,7 @@ void MainWindow::on_pushButton_ajoutC_clicked()
 
     // ---------- Validation ----------
     static QRegularExpression reAlpha("^[A-Za-zÀ-ÖØ-öø-ÿ\\s-]+$"); // letters + accents
-     static QRegularExpression reTel("^\\d{8}$");                   // exactly 8 digits
+    static QRegularExpression reTel("^\\d{8}$");                   // exactly 8 digits
     static const QRegularExpression reEmail(
         "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
         QRegularExpression::CaseInsensitiveOption
@@ -148,7 +149,7 @@ void MainWindow::on_pushButton_ajoutC_clicked()
 
     if(success) {
         ui->tableView_client->setModel(c.afficher());
-         displayClientsByCity();
+        displayClientsByCity();
 
         // Clear inputs
         ui->lineEdit_nom->clear();
@@ -199,7 +200,7 @@ void MainWindow::on_pushButton_modifC_clicked()
     const bool ok = c.modifier(id);
 
     if (ok) {
-         displayClientsByCity();
+        displayClientsByCity();
 
         ui->tableView_client->setModel(c.afficher());
         // Clear inputs
@@ -232,19 +233,19 @@ void MainWindow::on_pushButton_suppC_clicked()
         // Récupérer l'ID depuis la première colonne de la première ligne sélectionnée
         int id = selectedIndexes.at(0).sibling(selectedIndexes.at(0).row(), 0).data().toInt();
 
-        // Appeler la fonction supprimer de votre classe Fournisseur
+        // Appeler la fonction supprimer de votre classe
         bool supprime = client.supprimer(id);
 
         if (supprime) {
-             displayClientsByCity();
+            displayClientsByCity();
             // Rafraîchir le tableau après la suppression
             ui->tableView_client->setModel(client.afficher());
-            QMessageBox::information(this, "Suppression réussie", "Fournisseur supprimé avec succès.");
+            QMessageBox::information(this, "Suppression réussie", "Commande supprimé avec succès.");
         } else {
-            QMessageBox::warning(this, "Échec de la suppression", "Échec de la suppression du fournisseur.");
+            QMessageBox::warning(this, "Échec de la suppression", "Échec de la suppression du commande.");
         }
     } else {
-        QMessageBox::warning(this, "Aucun fournisseur sélectionné", "Veuillez sélectionner un fournisseur à supprimer.");
+        QMessageBox::warning(this, "Aucun commande sélectionné", "Veuillez sélectionner un commande à supprimer.");
     }
 }
 
@@ -434,37 +435,77 @@ void MainWindow::on_pushButton_2_clicked()
 
 void MainWindow::on_pushButton_ajoutCm_clicked()
 {
+    // === 1. Collect values from UI ===
     QDate   dateCommande = ui->dateEdit_Commande->date();
     QString etat         = ui->comboBox_etat->currentText().trimmed();
-    double  montant      = ui->lineEdit_montant->text().trimmed().toDouble();
+    QString montantStr   = ui->lineEdit_montant->text().trimmed();
     int     idClient     = ui->comboBox_client->currentData().toInt();
     if (idClient == 0) idClient = ui->comboBox_client->currentText().toInt(); // fallback
 
-    Commande c = Commande(idClient, montant, etat, dateCommande);
+    // === 2. Validations ===
+
+
+    if (dateCommande < QDate::currentDate()) {
+        QMessageBox::warning(this, "Validation",
+                             "La date de commande doit être aujourd'hui ou dans le futur !");
+        return;
+    }
+
+    // Client selection
+    if (idClient <= 0) {
+        QMessageBox::warning(this, "Validation", "Veuillez sélectionner un client valide !");
+        return;
+    }
+
+    // Montant presence + valid number
+    if (montantStr.isEmpty()) {
+        QMessageBox::warning(this, "Validation", "Veuillez saisir un montant !");
+        return;
+    }
+
+    bool okMontant = false;
+    double montant = montantStr.toDouble(&okMontant);
+    if (!okMontant || montant <= 0) {
+        QMessageBox::warning(this, "Validation", "Le montant doit être un nombre positif !");
+        return;
+    }
+
+    // Etat not empty
+    if (etat.isEmpty()) {
+        QMessageBox::warning(this, "Validation", "Veuillez choisir un état !");
+        return;
+    }
+
+    // Date: must be today or future
+    if (dateCommande < QDate::currentDate()) {
+        QMessageBox::warning(this, "Validation", "La date de commande doit être aujourd'hui ou plus tard !");
+        return;
+    }
+
+    // === 3. If all good, create and add commande ===
+    Commande c(idClient, montant, etat, dateCommande);
     bool success = c.ajouter();
 
-    if (success)
-    {
+    if (success) {
         displayCommandesByEtat();
         ui->tableView_commande->setModel(c.afficher());
 
-        // Clear inputs
+        // Reset inputs
         ui->dateEdit_Commande->setDate(QDate::currentDate());
         ui->comboBox_etat->setCurrentIndex(0);
         ui->lineEdit_montant->clear();
-        if (ui->comboBox_client->count() > 0) ui->comboBox_client->setCurrentIndex(0);
+        if (ui->comboBox_client->count() > 0)
+            ui->comboBox_client->setCurrentIndex(0);
 
-        QMessageBox::information(nullptr, QObject::tr("ajout"),
-                                 QObject::tr("Commande ajoutée avec succès.\n"
-                                             "Click Cancel to exit."), QMessageBox::Cancel);
-    }
-    else
-    {
-        QMessageBox::critical(nullptr, QObject::tr("fail"),
-                              QObject::tr("L'ajout de la commande a échoué.\n"
-                                          "Click Cancel to exit."), QMessageBox::Cancel);
+        QMessageBox::information(this, "Ajout",
+                                 "Commande ajoutée avec succès !");
+    } else {
+        QMessageBox::critical(this, "Échec",
+                              "L'ajout de la commande a échoué !");
     }
 }
+
+
 
 
 void MainWindow::on_pushButton_modifCm_clicked()
@@ -473,8 +514,39 @@ void MainWindow::on_pushButton_modifCm_clicked()
 
     QDate   dateCommande = ui->dateEdit_Commande->date();
     QString etat         = ui->comboBox_etat->currentText().trimmed();
-    double  montant      = ui->lineEdit_montant->text().trimmed().toDouble();
+    QString montantStr   = ui->lineEdit_montant->text().trimmed();
     int     idClient     = ui->comboBox_client->currentData().toInt();
+
+    if (dateCommande < QDate::currentDate()) {
+        QMessageBox::warning(this, "Validation",
+                             "La date de commande doit être aujourd'hui ou dans le futur !");
+        return;
+    }
+
+    // Client selection
+    if (idClient <= 0) {
+        QMessageBox::warning(this, "Validation", "Veuillez sélectionner un client valide !");
+        return;
+    }
+
+    // Montant presence + valid number
+    if (montantStr.isEmpty()) {
+        QMessageBox::warning(this, "Validation", "Veuillez saisir un montant !");
+        return;
+    }
+
+    bool okMontant = false;
+    double montant = montantStr.toDouble(&okMontant);
+    if (!okMontant || montant <= 0) {
+        QMessageBox::warning(this, "Validation", "Le montant doit être un nombre positif !");
+        return;
+    }
+
+    // Etat not empty
+    if (etat.isEmpty()) {
+        QMessageBox::warning(this, "Validation", "Veuillez choisir un état !");
+        return;
+    }
 
 
     Commande c = Commande(id, idClient, montant, etat, dateCommande);
@@ -490,12 +562,12 @@ void MainWindow::on_pushButton_modifCm_clicked()
 
 
 
-        // Update the table view with the modified fournisseur data
+        // Update the table view with the modified commande data
         ui->tableView_commande->setModel(commande.afficher());
-         ui->lineEdit_idCommande->clear();
+        ui->lineEdit_idCommande->clear();
 
         ui->dateEdit_Commande->setDate(QDate::currentDate());
-         ui->comboBox_etat->setCurrentIndex(0);
+        ui->comboBox_etat->setCurrentIndex(0);
         ui->lineEdit_montant->clear();
         if (ui->comboBox_client->count() > 0) ui->comboBox_client->setCurrentIndex(0);
         if (etat.compare("Complete", Qt::CaseInsensitive) == 0) {
@@ -505,8 +577,8 @@ void MainWindow::on_pushButton_modifCm_clicked()
 
 
         // Display success message
-        QMessageBox::information(nullptr, QObject::tr("Modifier un fournisseur"),
-                                 QObject::tr("Fournisseur modifié.\n"
+        QMessageBox::information(nullptr, QObject::tr("Modifier une commande"),
+                                 QObject::tr("Commande modifié.\n"
                                              "Click Cancel to exit."), QMessageBox::Cancel);
     } else {
         // Display error message
@@ -542,12 +614,12 @@ void MainWindow::on_pushButton_suppCm_clicked()
             ui->comboBox_client->setCurrentIndex(0); // Assuming index 0 is a default value
             ui->lineEdit_montant->clear();
 
-            QMessageBox::information(this, "Suppression réussie", "Fournisseur supprimé avec succès.");
+            QMessageBox::information(this, "Suppression réussie", "Commande supprimée avec succès.");
         } else {
-            QMessageBox::warning(this, "Échec de la suppression", "Échec de la suppression du fournisseur.");
+            QMessageBox::warning(this, "Échec de la suppression", "Échec de la suppression du commande.");
         }
     } else {
-        QMessageBox::warning(this, "Aucun fournisseur sélectionné", "Veuillez sélectionner un fournisseur à supprimer.");
+        QMessageBox::warning(this, "Aucune commande sélectionné", "Veuillez sélectionner une commande à supprimer.");
     }
 }
 
@@ -731,33 +803,33 @@ void MainWindow::on_tableView_commande_doubleClicked(const QModelIndex &index)
 void MainWindow::chargerClientsDansComboBox()
 {
 
-        // Clear existing items
-        ui->comboBox_client->clear();
+    // Clear existing items
+    ui->comboBox_client->clear();
 
-        // Add default selection
-        ui->comboBox_client->addItem("-- Sélectionner un client --", -1);
+    // Add default selection
+    ui->comboBox_client->addItem("-- Sélectionner un client --", -1);
 
-        // Create and execute query directly here
-        QSqlQuery query;
-        query.prepare("SELECT id_client, nom, prenom FROM client ORDER BY nom, prenom");
+    // Create and execute query directly here
+    QSqlQuery query;
+    query.prepare("SELECT id_client, nom, prenom FROM client ORDER BY nom, prenom");
 
-        if (!query.exec()) {
-            qDebug() << "Erreur SQL:" << query.lastError().text();
-            return;
-        }
+    if (!query.exec()) {
+        qDebug() << "Erreur SQL:" << query.lastError().text();
+        return;
+    }
 
-        // Iterate through results and populate combo box
-        while (query.next()) {
-            int idClient = query.value("id_client").toInt();
-            QString nom = query.value("nom").toString();
-            QString prenom = query.value("prenom").toString();
+    // Iterate through results and populate combo box
+    while (query.next()) {
+        int idClient = query.value("id_client").toInt();
+        QString nom = query.value("nom").toString();
+        QString prenom = query.value("prenom").toString();
 
-            // Create full name for display
-            QString fullName = nom + " " + prenom;
+        // Create full name for display
+        QString fullName = nom + " " + prenom;
 
-            // Add to combo box: display full name, store client ID as user data
-            ui->comboBox_client->addItem(fullName, idClient);
-        }
+        // Add to combo box: display full name, store client ID as user data
+        ui->comboBox_client->addItem(fullName, idClient);
+    }
 }
 
 
@@ -1113,15 +1185,15 @@ void MainWindow::envoyerEmailCommandeComplete(int idClient, int idCommande)
     QtSMTPClient mailer;
     qDebug() << "🔄 Trying STARTTLS...";
     mailer.setServer("smtp.gmail.com", 587, false); // STARTTLS
-    mailer.setAuth("maramhidri8@gmail.com", "xxsd zxop ughm noqr");
-    if (mailer.sendEmail("maramhidri8@gmail.com", emailClient, subject, body)) {
+    mailer.setAuth("jery.wizin@gmail.com", "ahtb qwxe bbwc jstw");
+    if (mailer.sendEmail("jery.wizin@gmail.com", emailClient, subject, body)) {
         qDebug() << "✅ Email sent with STARTTLS (HTML)";
         return;
     }
     qDebug() << "⚠️ STARTTLS failed, trying SSL...";
     mailer.setServer("smtp.gmail.com", 465, true); // SSL direct
-    mailer.setAuth("maramhidri8@gmail.com", "xxsd zxop ughm noqr");
-    if (mailer.sendEmail("maramhidri8@gmail.com", emailClient, subject, body)) {
+    mailer.setAuth("jery.wizin@gmail.com", "ahtb qwxe bbwc jstw");
+    if (mailer.sendEmail("jery.wizin@gmail.com", emailClient, subject, body)) {
         qDebug() << "✅ Email sent with SSL (HTML)";
         return;
     }
@@ -1298,7 +1370,7 @@ void MainWindow::displayCommandesByEtat() {
 
 
 
-////////////////////research
+
 
 
 
@@ -1307,4 +1379,7 @@ void MainWindow::on_dateEdit_search_cm_dateChanged(const QDate &date)
     QSqlQueryModel* model = Commande::rechercherParDate(date);
     ui->tableView_commande->setModel(model);
 }
+
+
+
 

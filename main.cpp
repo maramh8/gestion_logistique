@@ -11,6 +11,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
 
+
     QFile styleFile( "C:/Users/maram/OneDrive/bureau/gestion_logistique/style.qss.txt" );
     styleFile.open( QFile::ReadOnly );
 

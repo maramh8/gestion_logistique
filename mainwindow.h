@@ -77,10 +77,12 @@ private slots:
 
     void on_dateEdit_search_cm_dateChanged(const QDate &date);
 
+
+
 private:
     Ui::MainWindow *ui;
 
-    QPushButton *loadButton;
+
     QImage currentQrImage;
 
 };

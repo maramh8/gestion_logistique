@@ -1,0 +1,10 @@
+release/QrCode.o
+release/QtSMTPClient.o
+release/client.o
+release/commande.o
+release/connection.o
+release/main.o
+release/mainwindow.o
+release/qrc_resources.o
+release/moc_QtSMTPClient.o
+release/moc_mainwindow.o
